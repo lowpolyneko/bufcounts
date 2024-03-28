@@ -32,7 +32,7 @@ typedef pthread_spinlock_t lock_t;
 typedef struct {
     lock_t lock;
     long total_count;
-    buf buffer;
+    buf *buffer;
 } item;
 item items[ARRAY_SIZE]; 
 
@@ -41,7 +41,7 @@ void update_buffer_elements(unsigned thread_id) {
     #if THREAD_MAX > 1
         lock_acquire(&items[i].lock);
     #endif
-        update_buffer(&items[i].buffer,0);
+        update_buffer(items[i].buffer,0);
     #if THREAD_MAX > 1
         lock_release(&items[i].lock);
     #endif
@@ -84,7 +84,10 @@ int main() {
     int correct = 1;
 
     for (int i = 0; i < ARRAY_SIZE; i++) {
-        memset(items[i].buffer.counter,0,BUF_SIZE*8);
+	// malloc buffer here
+	items[i].buffer = malloc(sizeof(buf));
+
+        memset(items[i].buffer->counter,0,BUF_SIZE*8);
         lock_init(&items[i].lock, 0);
     }
 
@@ -127,7 +130,7 @@ int main() {
     for (int i = 0; i < ARRAY_SIZE; i++) {
         long sum = 0;
         for (int j = 0; j < BUF_SIZE; j++) {
-            sum+=items[i].buffer.counter[j];
+            sum+=items[i].buffer->counter[j];
         }
         if (sum != items[i].total_count) {
             fprintf(stderr,"Error: Item %d has sum %ld != %ld. Expected %d.\n",
@@ -136,7 +139,7 @@ int main() {
             break;
         }
 
-        if(check_buffer_alignment(&items[i].buffer)!=0) {
+        if(check_buffer_alignment(items[i].buffer)!=0) {
             printf("Error: Buffer is incorrectly aligned %p, should be aligned %lu.\n",
             &items[i].buffer, alignof(buf));
         }
@@ -153,6 +156,11 @@ int main() {
          elapsed_ns_buf / (double)(ARRAY_SIZE * ITERATIONS));
     } else {
         printf("Error: Buffer values are incorrect.\n");
+    }
+
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+	    // free bufs
+	    free(items[i].buffer);
     }
 
     return 0;
