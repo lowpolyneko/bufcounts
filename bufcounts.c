@@ -35,6 +35,7 @@ typedef struct {
     buf *buffer;
 } item;
 item items[ARRAY_SIZE]; 
+buf bufs[ARRAY_SIZE];
 
 void update_buffer_elements(unsigned thread_id) {
     for (int i = 0; i < ARRAY_SIZE; i++) {
@@ -85,7 +86,8 @@ int main() {
 
     for (int i = 0; i < ARRAY_SIZE; i++) {
 	// ~~malloc~~ memalign buffer here
-	items[i].buffer = memalign(sizeof(buf), 8192);
+	// items[i].buffer = memalign(sizeof(buf), 8192);
+	items[i].buffer = bufs + i;
 
         memset(items[i].buffer->counter,0,BUF_SIZE*8);
         lock_init(&items[i].lock, 0);
@@ -158,10 +160,10 @@ int main() {
         printf("Error: Buffer values are incorrect.\n");
     }
 
-    for (int i = 0; i < ARRAY_SIZE; i++) {
-	    // free bufs
-	    free(items[i].buffer);
-    }
+    // for (int i = 0; i < ARRAY_SIZE; i++) {
+	   //  // free bufs
+	   //  free(items[i].buffer);
+    // }
 
     return 0;
 }
