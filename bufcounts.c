@@ -84,8 +84,8 @@ int main() {
     int correct = 1;
 
     for (int i = 0; i < ARRAY_SIZE; i++) {
-	// malloc buffer here
-	items[i].buffer = malloc(sizeof(buf));
+	// ~~malloc~~ memalign buffer here
+	items[i].buffer = memalign(sizeof(buf), 8192);
 
         memset(items[i].buffer->counter,0,BUF_SIZE*8);
         lock_init(&items[i].lock, 0);
